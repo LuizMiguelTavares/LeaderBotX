@@ -20,6 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "emergency_button = NavBotX.EmergencyButton:main",
+            "navigation = NavBotX.Navigation:main",
+            "pub_path = NavBotX.PubPath:main"
         ],
     },
 )
