@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Bool
 from geometry_msgs.msg import Point, Quaternion, Twist, Pose, Vector3
 from math import cos, sin, pi
 
@@ -22,13 +23,23 @@ class CircularPathPublisher(Node):
                                                 'odom',
                                                 10)
         
+        self.subscription = self.create_subscription(
+            Bool,
+            'emergency_flag',
+            self.emergency_button_callback,
+            10 
+        )
+        
         # Create a CSV file to store the data
-        self.csv_file = open('circular_path_data.csv', 'w')
-        self.csv_writer = csv.writer(self.csv_file)
-        self.csv_writer.writerow(['Time', 'X', 'Y'])
+        # self.csv_file = open('circular_path_data.csv', 'w')
+        # self.csv_writer = csv.writer(self.csv_file)
+        # self.csv_writer.writerow(['Time', 'X', 'Y'])
 
         self.timer = self.create_timer(self.freq,
                                         self.publish_odometry)
+        
+        # Initializing emergency button to False
+        self.btn_emergencia = False
         
     def publish_odometry(self):
 
@@ -46,8 +57,8 @@ class CircularPathPublisher(Node):
         vx = -self.radius * self.angular_velocity * sin(self.angular_velocity * elapsed_time)
         vy = self.radius * self.angular_velocity * cos(self.angular_velocity * elapsed_time)
 
-        # Write the data to the CSV file
-        self.csv_writer.writerow([elapsed_time, x, y])
+        # # Write the data to the CSV file
+        # self.csv_writer.writerow([elapsed_time, x, y])
 
         # Create the Odometry message
         odometry = Odometry()
@@ -59,6 +70,12 @@ class CircularPathPublisher(Node):
         odometry.twist.twist.angular = Vector3()
 
         self.publisher.publish(odometry)
+
+    def emergency_button_callback(self, msg):
+        if msg.data:
+            self.btn_emergencia = True
+            self.get_logger().info('Path publisher node stopping by Emergency')
+            raise SystemExit
 
 def main(args=None):
     rclpy.init(args=args)

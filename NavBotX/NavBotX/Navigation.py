@@ -148,6 +148,18 @@ class PioneerController(Node):
 
         if self.prev_pose == None:
             return
+        
+        desired_linear_velocity, desired_angular_velocity = self.controller()
+
+        ctrl_msg = Twist()
+        ctrl_msg.linear.x = desired_linear_velocity
+        ctrl_msg.linear.y = 0.0
+        ctrl_msg.linear.z = 0.0
+        ctrl_msg.angular.x = 0.0
+        ctrl_msg.angular.y = 0.0
+        ctrl_msg.angular.z = desired_angular_velocity
+        # Publish the Twist message to control the robot
+        self.publisher.publish(ctrl_msg)
 
         if self.btn_emergencia:
             self.get_logger().info('Robot stopping by Emergency')
@@ -165,25 +177,13 @@ class PioneerController(Node):
                 self.publisher.publish(stop_cmd)
 
             raise SystemExit
-        
-        desired_linear_velocity, desired_angular_velocity = self.controller()
-
-        ctrl_msg = Twist()
-        ctrl_msg.linear.x = desired_linear_velocity
-        ctrl_msg.linear.y = 0.0
-        ctrl_msg.linear.z = 0.0
-        ctrl_msg.angular.x = 0.0
-        ctrl_msg.angular.y = 0.0
-        ctrl_msg.angular.z = desired_angular_velocity
-        # Publish the Twist message to control the robot
-        self.publisher.publish(ctrl_msg)
     
     def controller(self):
         Kp = np.array([[self.pgains[0], 0], 
                        [0, self.pgains[1]]])
 
         K  = np.array([[np.cos(self.robot_yaw), -self.a*np.sin(self.robot_yaw)], 
-                       [np.sin(self.robot_yaw), -self.a*np.cos(self.robot_yaw)]])
+                       [np.sin(self.robot_yaw), self.a*np.cos(self.robot_yaw)]])
         
         Xtil = np.array([0, 0])
         Xtil[0] = self.path_x - self.robot_x
