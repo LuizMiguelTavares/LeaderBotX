@@ -13,6 +13,7 @@ from tf_transformations import euler_from_quaternion
 from math import cos, sin, pi
 import numpy as np
 import time
+import math
 
 class PioneerController(Node):
     def __init__(self):
@@ -47,15 +48,6 @@ class PioneerController(Node):
         self.pgains = [1.5, 1, 1.5, 1]
         self.a = 0.3
 
-        self.rX = 1
-        self.rY = 1
-        self.T = 20
-        self.w = 2 * pi / self.T
-
-        self.t_exp = 60
-        self.t_run = 1/30
-        self.t = 0
-
         self.prev_pose = None
         self.prev_time = None
 
@@ -64,12 +56,12 @@ class PioneerController(Node):
 
     def RobotPose(self, msg):
         # Process the pose data
-        pose = msg.pose.pose
+        pose = msg.pose
 
         # Process the pose data
-        self.robot_x = msg.pose.position.x
-        self.robot_y = msg.pose.position.y
-        self.robot_z = msg.pose.position.z
+        self.robot_x = pose.position.x
+        self.robot_y = pose.position.y
+        self.robot_z = pose.position.z
 
         orientation = pose.orientation
         self.robot_roll, self.robot_pitch, self.robot_yaw = euler_from_quaternion( 
@@ -82,8 +74,8 @@ class PioneerController(Node):
 
             # Calculate linear velocity
             self.robot_linear_x = (msg.pose.position.x - self.prev_pose.position.x) / time_diff
-            self.robot_linear_y = (msg.pose.position.y - self.prev_position.y) / time_diff
-            self.robot_linear_z = (msg.pose.position.z - self.prev_position.z) / time_diff
+            self.robot_linear_y = (msg.pose.position.y - self.prev_pose.position.y) / time_diff
+            self.robot_linear_z = (msg.pose.position.z - self.prev_pose.position.z) / time_diff
 
             # Convert Euler angles (roll, pitch, yaw) to angular velocities
             euler_diff = self.calculate_euler_diff(msg.pose.orientation, self.prev_pose.orientation)
@@ -97,11 +89,13 @@ class PioneerController(Node):
         self.prev_time = time.time()
 
     def calculate_euler_diff(self, current_orientation, previous_orientation):
-        # Extract Euler angles (roll, pitch, yaw) from orientations
-        current_euler = euler_from_quaternion(current_orientation)
-        previous_euler = euler_from_quaternion(previous_orientation)
+        # Convert the quaternion objects to lists
+        current_quaternion = [current_orientation.x, current_orientation.y, current_orientation.z, current_orientation.w]
+        previous_quaternion = [previous_orientation.x, previous_orientation.y, previous_orientation.z, previous_orientation.w]
 
-        # Calculate Euler angle differences
+        # Calculate the Euler angle differences
+        current_euler = euler_from_quaternion(current_quaternion)
+        previous_euler = euler_from_quaternion(previous_quaternion)
         euler_diff = [
             self.normalize_angle(current_euler[0] - previous_euler[0]),
             self.normalize_angle(current_euler[1] - previous_euler[1]),
@@ -110,6 +104,13 @@ class PioneerController(Node):
 
         return euler_diff
     
+    def normalize_angle(self, angle):
+        while angle > math.pi:
+            angle -= 2 * math.pi
+        while angle < -math.pi:
+            angle += 2 * math.pi
+        return angle
+        
     def Path(self, msg):
         pose = msg.pose.pose
         velocity = msg.twist.twist
