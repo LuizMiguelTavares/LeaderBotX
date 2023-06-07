@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             "emergency_button = NavBotX.EmergencyButton:main",
             "navigation = NavBotX.Navigation:main",
-            "pub_path = NavBotX.PubPath:main"
+            "pub_path = NavBotX.PubPath:main",
+            "repub_pose = NavBotX.republish_optitrack:main",
         ],
     },
 )

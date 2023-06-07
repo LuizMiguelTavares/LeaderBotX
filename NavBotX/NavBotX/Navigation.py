@@ -151,6 +151,8 @@ class PioneerController(Node):
         
         desired_linear_velocity, desired_angular_velocity = self.controller()
 
+        self.get_logger().info('Linear Velocity' + str(desired_linear_velocity) + ', Angular Velocity' + str(desired_angular_velocity))
+
         ctrl_msg = Twist()
         ctrl_msg.linear.x = desired_linear_velocity
         ctrl_msg.linear.y = 0.0
@@ -197,8 +199,8 @@ class PioneerController(Node):
         if desired_linear_velocity > 0.5:
             desired_linear_velocity = np.sign(desired_linear_velocity)*0.5
 
-        if desired_angular_velocity > 0.75:
-            desired_angular_velocity = np.sign(desired_angular_velocity)*0.75
+        if desired_angular_velocity > 0.5:
+            desired_angular_velocity = np.sign(desired_angular_velocity)*0.5
         
         return desired_linear_velocity, desired_angular_velocity
 
